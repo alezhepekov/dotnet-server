@@ -16,8 +16,8 @@ public class Server : BackgroundService
     public Server(IConfiguration configuration, ILogger<Server> logger)
     {
         _configuration = configuration;
-        _ipAddress = _configuration.GetSection("ListenAddr").Get<string>();
-        _port = _configuration.GetSection("ListenPort").Get<string>();
+        _ipAddress = _configuration["ListenAddr"];
+        _port = _configuration["ListenPort"];
         _logger = logger;
         Start();
     }
