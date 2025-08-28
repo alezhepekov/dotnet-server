@@ -11,7 +11,7 @@ public class Server : BackgroundService
     private string _ipAddress;
     private string _port;
     private bool _isStopped = true;
-    private TcpListener _listener;    
+    private TcpListener _listener;
 
     public Server(IConfiguration configuration, ILogger<Server> logger)
     {
@@ -39,8 +39,7 @@ public class Server : BackgroundService
     private async Task Start()
     {
         var ipEndPoint = new IPEndPoint(IPAddress.Parse(_ipAddress), int.Parse(_port));
-        _listener = new(ipEndPoint);
-       
+        _listener = new(ipEndPoint);       
         _listener.Start();
         if (_logger.IsEnabled(LogLevel.Information))
         {
@@ -48,17 +47,17 @@ public class Server : BackgroundService
         }
         _isStopped = false;
 
-        while (!_isStopped)
-        {
-            using TcpClient handler = await _listener.AcceptTcpClientAsync();
-            await using NetworkStream stream = handler.GetStream();
+        TcpClient handler = await _listener.AcceptTcpClientAsync();
+        await using NetworkStream stream = handler.GetStream();
 
-            var message = $"📅 {DateTime.Now} 🕛";
-            var dateTimeBytes = Encoding.UTF8.GetBytes(message);
-            await stream.WriteAsync(dateTimeBytes);
+        var buffer = new byte[1_024];
+        int receivedByteCount = 0;
+        while (!_isStopped && (receivedByteCount = stream.Read(buffer)) > 0)
+        {
+            var message = Encoding.UTF8.GetString(buffer, 0, receivedByteCount);
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation($"Sent message: \"{message}\"");
+                _logger.LogInformation($"Message received: \"{message}\"");
             }
         }
     }
